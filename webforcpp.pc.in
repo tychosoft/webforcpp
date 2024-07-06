@@ -1,0 +1,6 @@
+prefix=${CMAKE_INSTALL_PREFIX}
+includedir=${CMAKE_INSTALL_FULL_INCLUDEDIR}
+
+Name: webforcpp
+Description: Portable C++ web services
+Version: ${PROJECT_VERSION}
