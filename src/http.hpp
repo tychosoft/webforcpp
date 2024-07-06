@@ -4,6 +4,16 @@
 #ifndef WEB_HTTP_HPP_
 #define WEB_HTTP_HPP_
 
+#define CPPHTTPLIB_USE_POLL
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__) || defined(WIN32)
+#if _WIN32_WINNT < 0x0600 && !defined(_MSC_VER)
+#undef  _WIN32_WINNT
+#define _WIN32_WINNT    0x0600
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include "httplib.h"
 
 #include <cstdint>
