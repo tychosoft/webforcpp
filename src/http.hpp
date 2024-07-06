@@ -6,6 +6,7 @@
 
 #include "httplib.h"
 
+#include <cstdint>
 #include <memory>
 
 namespace web::http {
@@ -13,8 +14,8 @@ using namespace httplib;
 
 // Additional special functions we may add...
 
-inline auto make_client(const std::string& url) {
-    return std::make_shared<Client>(url);
+inline auto make_client(const std::string& host, uint16_t port = 80) {
+    return std::make_shared<Client>(host, port);
 }
 }   // end namespace
 

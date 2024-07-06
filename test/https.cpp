@@ -4,8 +4,9 @@
 #undef  NDEBUG
 #include "compiler.hpp"
 #include "https.hpp"
+#include "http.hpp"     // mostly to compile check...
 
-auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {
-    auto client = web::https::make_client("localhost");
+auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int { // NOLINT
+    auto client = web::https::make_client("https://localhost");
 }
 
