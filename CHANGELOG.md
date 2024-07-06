@@ -1,5 +1,5 @@
 # Release Notes
 
-## v0.0.1
+## v0.1.0
 - Project introduced initially with just base headers.
 

@@ -1,7 +1,7 @@
 {
   "builtin-baseline": "94a50e8c1357d423840e22451e122f56d62b5c20",
   "name": "webforcpp",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "dependencies": [
     "openssl",
     "pkgconf",
