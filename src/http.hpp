@@ -1,8 +1,8 @@
 // Copyright (C) 2024 Tycho Softworks.
 // This code is licensed under MIT license.
 
-#ifndef WEB_HTTPS_HPP_
-#define WEB_HTTPS_HPP_
+#ifndef WEB_HTTP_HPP_
+#define WEB_HTTP_HPP_
 
 #include "httplib.h"
 

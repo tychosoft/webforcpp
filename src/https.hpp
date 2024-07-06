@@ -4,7 +4,7 @@
 #ifndef WEB_HTTPS_HPP_
 #define WEB_HTTPS_HPP_
 
-#define CPPHTTPLIB_OPENSSL_SUPPORT 1    // NOLINT
+#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "httplib.h"
 
 #include <memory>

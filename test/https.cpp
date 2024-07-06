@@ -2,7 +2,6 @@
 // This code is licensed under MIT license.
 
 #undef  NDEBUG
-#define CPPHTTPLIB_OPENSSL_SUPPORT 1    // NOLINT
 #include "compiler.hpp"
 #include "https.hpp"
 
