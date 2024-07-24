@@ -12,13 +12,6 @@ string(TOLOWER "${PROJECT_NAME}" PROJECT_ARCHIVE)
 include(GNUInstallDirs)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-source_group("Documentation" REGULAR_EXPRESSION  ".*\\.(1|2|3|4|5|6|8|md|tex)")
-source_group("Generated Files" REGULAR_EXPRESSION  ".*\\.(in)")
-source_group("Header Files" REGULAR_EXPRESSION  ".*\\.(hpp|h)")
-source_group("Source Files" REGULAR_EXPRESSION  ".*\\.(cpp|c)")
-source_group("Config Files" REGULAR_EXPRESSION ".*\\.(conf|ini|reg)")
-source_group("Script Files" REGULAR_EXPRESSION ".*\\.(sh|py|rb|js)")
-
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
     set(BUILD_TESTING TRUE)
     if(NOT MSVC)
@@ -44,9 +37,10 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 
 # Common tarball distribution
-add_custom_target(dist
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    COMMAND "${CMAKE_COMMAND}" -E remove -F "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-*.tar.gz"
-    COMMAND git archive -o "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-${PROJECT_VERSION}.tar.gz" --format tar.gz --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" "v${PROJECT_VERSION}" 2>/dev/null || git archive -o "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_ARCHIVE}-${PROJECT_VERSION}.tar.gz" --format tar.gz --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" HEAD
-)
-
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git/")
+    add_custom_target(dist
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMAND "${CMAKE_COMMAND}" -E remove -F "${PROJECT_ARCHIVE}-*.tar.gz"
+        COMMAND git archive -o "${PROJECT_ARCHIVE}-${PROJECT_VERSION}.tar.gz" --format tar.gz --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" "v${PROJECT_VERSION}" 2>/dev/null || git archive -o "${PROJECT_ARCHIVE}-${PROJECT_VERSION}.tar.gz" --format tar.gz --prefix="${PROJECT_ARCHIVE}-${PROJECT_VERSION}/" HEAD
+    )
+endif()
