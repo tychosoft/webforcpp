@@ -4,7 +4,9 @@
 #undef  NDEBUG
 #include "compiler.hpp"     // IWYU pragma: keep
 #include "https.hpp"
-#include "http.hpp"         // mostly to compile check...
+
+// Mostly to compile-check inclusion with https...
+#include "http.hpp"         // IWYU pragma: keep
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int { // NOLINT
     auto client = web::https::make_client("https://localhost");
