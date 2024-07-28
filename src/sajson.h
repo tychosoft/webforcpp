@@ -24,15 +24,24 @@
 
 #pragma once
 
+#ifdef _WIN32
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif //_CRT_SECURE_NO_WARNINGS
+
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+#endif //_CRT_NONSTDC_NO_DEPRECATE
+#endif
+
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <cstdio>
-#include <limits.h>
+#include <climits>
 #include <limits>
-#include <math.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 
 #ifndef SAJSON_NO_STD_STRING
 #include <string> // for convenient access to error messages and string values.
