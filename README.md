@@ -28,6 +28,13 @@ may have a make\_XXX function to create an exposed client context in a shared
 pointer that can then be used for forced closure and a separate api request
 function that uses a client context which can be handed off to a client thread.
 
+## Dependencies
+
+Webforcpp uses openssl for crypto operations and https related functionality.
+In addition, C++ thread support may have to be enabled to use C++ thread
+operations. The cmake/features.cmake file shows how to test for and enable
+these dependencies correctly from CMake.
+
 ## Distributions
 
 Distributions of this package are provided as detached source tarballs made
@@ -36,21 +43,21 @@ detached tarballs can be used to make packages for many GNU/Linux systems, and
 for BSD ports. They may also be used to build and install the software directly
 on a target platform.
 
-The latest release source tarball is found at
-https://www.tychosoft.com/tychosoft/-/packages/generic/webforcpp which provides
-access to past releases as well.
+The latest release source tarball is found at either
+https://www.tychosoft.com/tychosoft/-/packages/generic/webforcpp or thru an
+auto-generated tarball from the projects public gitlab release page, both which
+provides access to past releases as well.
 
 ## Participation
 
 This project is offered as free (as in freedom) software for public use and has
-a public home page at https://www.tychosoft.com/tychosoft/webforcpp which has
-an issue tracker where people can submit public bug reports, and a wiki for
-hosting project documentation. We are not maintaining a public git repo nor do
-we have any production or development related resources hosted on external
-sites. Patches may be submitted and attached to an issue in the issue tracker.
-Support requests and other kinds of inquiries may also be sent privately thru
-email to tychosoft@gmail.com. Other details about participation may be found in
-the Contributing page.
+a public project page at https://www.gitlab.com/tychosoft/webforcpp which has
+an issue tracker where people can submit public bug reports, a wiki for hosting
+project documentation, and a public git repository. Patches and merge
+requests may be submitted in the issue tracker or thru email. Support requests
+and other kinds of inquiries may also be sent thru the tychosoft gitlab help
+desktop service. Other details about participation may be found in the
+Contributing page.
 
 ## Testing
 
