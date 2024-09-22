@@ -1824,7 +1824,7 @@ public:
   bool is_valid() const override;
 
   SSL_CTX *ssl_context() const;
-  
+
   void update_certs (X509 *cert, EVP_PKEY *private_key,
             X509_STORE *client_ca_cert_store = nullptr);
 

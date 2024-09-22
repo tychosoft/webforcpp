@@ -28,6 +28,47 @@ using namespace httplib;
 
 // Additional special functions we may add...
 
+using error = httplib::Error;
+class bad_https final : public std::exception {
+public:
+    bad_https() = delete;
+    bad_https(const bad_https& other) = default;
+    explicit bad_https(error code, const char *msg) : err_(code), msg_(msg) {}
+    auto operator=(const bad_https&) -> auto& = delete;
+
+    auto err() const {
+        return err_;
+    }
+
+    auto what() const noexcept -> const char * override {
+        return msg_;
+    }
+
+private:
+    error err_{error::Success};
+    const char *msg_{nullptr};
+};
+
+inline auto get_client(std::shared_ptr<Client> ctx, const std::string& path) {
+    auto result = ctx->Get(path);
+    if(!result)
+        throw bad_https(result.error(), "Internal failure");
+    auto response = result.value();
+    if(result.error() != error::Success)
+        throw bad_https(result.error(), status_message(response.status));
+    return response;
+}
+
+inline auto get_client(std::shared_ptr<SSLClient> ctx, const std::string& path) {
+    auto result = ctx->Get(path);
+    if(!result)
+        throw bad_https(result.error(), "Internal failure");
+    auto response = result.value();
+    if(result.error() != error::Success)
+        throw bad_https(result.error(), status_message(response.status));
+    return response;
+}
+
 inline auto make_client(const std::string& uri) {
     return std::make_shared<Client>(uri);
 }

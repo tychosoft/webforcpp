@@ -42,6 +42,9 @@ add_executable(test_https test/https.cpp src/https.hpp)
 target_link_libraries(test_https PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 add_test(NAME test-https COMMAND test_https)
 
+add_executable(try_ipinfo test/ipinfo.cpp src/ipinfo.hpp)
+target_link_libraries(try_ipinfo PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+
 # Extras...
 add_custom_target(header-files SOURCES ${headers})
 add_custom_target(support-files SOURCES ${markdown} ${optional})

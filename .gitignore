@@ -37,3 +37,4 @@ core
 *.tar.gz
 *.core
 test_*
+try_*
