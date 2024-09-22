@@ -9,14 +9,13 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 cmake_minimum_required(VERSION 3.16.0)
-project(WebForCPP VERSION 0.1.1 LANGUAGES CXX)
+project(WebForCPP VERSION 0.1.2 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB LINT_SOURCES
     RELATIVE ${PROJECT_SOURCE_DIR}
-    src/*.hpp test/*.cpp)
-list(REMOVE_ITEM LINT_SOURCES src/https.hpp src/http.hpp src/_client_helper.hpp)
+    src/json.hpp test/*.cpp)
 
 include(cmake/custom.cmake OPTIONAL)
 include(cmake/project.cmake)
