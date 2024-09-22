@@ -11,7 +11,7 @@ class ipinfo_t final {
 public:
     ipinfo_t(const ipinfo_t& from) = default;
     ipinfo_t(bool ssl = true) :
-    client_(https::make_client((ssl ? "https://" : "http://") + host())) {}  // NOLINT
+    client_(https::make_client((ssl ? "https://" : "http://") + host())) {}
 
     void close() {
         client_->stop();
@@ -25,7 +25,7 @@ public:
         auto query = "/" + address + "/" + type;
         if(!token_.empty())
             query += "?token=" + token_;
-        auto resp = https::get_client(client_, query);
+        auto resp = https::get_client(*client_, query);
         return resp;
     }
 

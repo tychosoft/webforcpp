@@ -16,7 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 file(GLOB LINT_SOURCES
     RELATIVE ${PROJECT_SOURCE_DIR}
     src/*.hpp test/*.cpp)
-list(REMOVE_ITEM LINT_SOURCES src/https.hpp src/http.hpp)
+list(REMOVE_ITEM LINT_SOURCES src/https.hpp src/http.hpp src/_client_helper.hpp)
 
 include(cmake/custom.cmake OPTIONAL)
 include(cmake/project.cmake)
