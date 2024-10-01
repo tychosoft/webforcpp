@@ -19,8 +19,8 @@ public:
     ast_t(const ast_t&) = delete;
     auto operator=(const ast_t&) -> ast_t& = delete;
 
-    explicit ast_t(size_t size = 500) :
-    data_(new size_t[size]), size_(size) {}
+    explicit ast_t(std::size_t size = 500) :
+    data_(new std::size_t[size]), size_(size) {}
 
     ~ast_t() {
         delete[] data_;
@@ -35,17 +35,17 @@ public:
     }
 
 private:
-    size_t *data_{nullptr};
-    size_t size_{0};
+    std::size_t *data_{nullptr};
+    std::size_t size_{0};
 };
 
-inline auto data_view(char *text, size_t size = 0) {
+inline auto data_view(char *text, std::size_t size = 0) {
     if(!size)
         size = strlen(text);   // FlawFinder: ignore
     return mutable_string_view(size, text);
 }
 
-inline auto make_view(const char *text, size_t size = 0) {
+inline auto make_view(const char *text, std::size_t size = 0) {
     if(!size)
         size = strlen(text);   // FlawFinder: ignore
     return mutable_string_view(sajson::string(text, size));

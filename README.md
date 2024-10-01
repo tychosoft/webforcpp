@@ -2,7 +2,7 @@
 
 This package offers modern web access using header-only libraries for C++17.
 This includes the httplib.h header-only library for http(s) clients and
-servers, and a linted sajason.h for jason parsing. In addition, supplimental
+servers, and a linted sajason.h for jason parsing. In addition, supplemental
 header-only libraries that access various specific web api services will also
 be added. The core dependencies only required C++11, but our extensions and
 api headers may require C++17.
@@ -21,7 +21,7 @@ Studio builds. The minimum requirement is a C++17 compiler (or later).
 
 Httplib uses blocking I/O, which means http requests launched in threads may
 block waiting for I/O completion. The simplest way to unblock an outstanding
-apirequest early is probably to force close the httplib client context stop()
+api request early is probably to force close the httplib client context stop()
 method from another thread. This and other interruptions may generate a SIGPIPE
 on posix platforms, which likely should be ignored. The individual API headers
 may have a make\_XXX function to create an exposed client context in a shared

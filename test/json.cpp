@@ -28,4 +28,3 @@ auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {
     const auto& json2 = parse(*ast2, make_view(s2));
     assert(json2.is_valid());
 }
-

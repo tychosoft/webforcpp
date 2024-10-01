@@ -80,7 +80,7 @@ namespace sajson {
  * Indicates a JSON value's type.
  *
  * In early versions of sajson, this was the tag value directly from the parsed
- * AST storage, but, to preserve API compabitility, it is now synthesized.
+ * AST storage, but, to preserve API compatibility, it is now synthesized.
  */
 enum type : uint8_t {
     TYPE_INTEGER,
@@ -102,7 +102,7 @@ namespace internal {
  * never lookup values by name! Therefore, only binary search for
  * large numbers of keys.
  */
-constexpr inline bool should_binary_search(size_t length) {
+constexpr inline bool should_binary_search(std::size_t length) {
 #ifdef SAJSON_UNSORTED_OBJECT_KEYS
     return false;
 #else
@@ -125,25 +125,26 @@ enum class tag : uint8_t {
     object,
 };
 
-static const size_t TAG_BITS = 3;
-static const size_t TAG_MASK = (1 << TAG_BITS) - 1;
-static const size_t VALUE_MASK = ~size_t{} >> TAG_BITS;
+static const std::size_t TAG_BITS = 3;
+static const std::size_t TAG_MASK = (1 << TAG_BITS) - 1;
+static const std::size_t VALUE_MASK = ~std::size_t{} >> TAG_BITS;
 
-static const size_t ROOT_MARKER = VALUE_MASK;
+static const std::size_t ROOT_MARKER = VALUE_MASK;
 
-constexpr inline tag get_element_tag(size_t s) {
+constexpr inline tag get_element_tag(std::size_t s) {
     return static_cast<tag>(s & TAG_MASK);
 }
 
-constexpr inline size_t get_element_value(size_t s) { return s >> TAG_BITS; }
+constexpr inline std::size_t get_element_value(std::size_t s) { return s >> TAG_BITS; }
 
-constexpr inline size_t make_element(tag t, size_t value) {
+constexpr inline std::size_t make_element(tag t, std::size_t value) {
     // assert((value & ~VALUE_MASK) == 0);
     // value &= VALUE_MASK;
-    return static_cast<size_t>(t) | (value << TAG_BITS);
+    return static_cast<std::size_t>(t) | (value << TAG_BITS);
 }
 
 // This template utilizes the One Definition Rule to create global arrays in a
+// cspell:disable-next-line
 // header. This trick courtesy of Rich Geldreich's Purple JSON parser.
 template <typename unused = void>
 struct globals_struct {
@@ -189,16 +190,16 @@ public:
     allocated_buffer()
         : memory(0) {}
 
-    explicit allocated_buffer(size_t length) {
+    explicit allocated_buffer(std::size_t length) {
         // throws std::bad_alloc upon allocation failure
-        void* buffer = operator new(sizeof(size_t) + length);
+        void* buffer = operator new(sizeof(std::size_t) + length);
         memory = static_cast<layout*>(buffer);
         memory->refcount = 1;
     }
 
     allocated_buffer(const allocated_buffer& that)
         : memory(that.memory) {
-        incref();
+        inc_ref();
     }
 
     allocated_buffer(allocated_buffer&& that) noexcept
@@ -206,20 +207,20 @@ public:
         that.memory = 0;
     }
 
-    ~allocated_buffer() { decref(); }
+    ~allocated_buffer() { dec_ref(); }
 
     allocated_buffer& operator=(const allocated_buffer& that) {
         if (this != &that) {
-            decref();
+            dec_ref();
             memory = that.memory;
-            incref();
+            inc_ref();
         }
         return *this;
     }
 
     allocated_buffer& operator=(allocated_buffer&& that) noexcept {
         if (this != &that) {
-            decref();
+            dec_ref();
             memory = that.memory;
             that.memory = 0;
         }
@@ -229,20 +230,20 @@ public:
     char* get_data() const { return memory ? memory->data : 0; }
 
 private:
-    void incref() const {
+    void inc_ref() const {
         if (memory) {
             ++(memory->refcount);
         }
     }
 
-    void decref() const {
+    void dec_ref() const {
         // optimizer may delete before dec??
         if (memory && --(memory->refcount) == 0) // NOLINT
             operator delete(memory);
     }
 
     struct layout {
-        size_t refcount;
+        std::size_t refcount;
         char data[];
     };
 
@@ -254,13 +255,13 @@ private:
 /// Does not maintain any memory.
 class string {
 public:
-    string(const char* text_, size_t length)
+    string(const char* text_, std::size_t length)
         : text(text_)
         , _length(length) {}
 
     const char* data() const { return text; }
 
-    size_t length() const { return _length; }
+    std::size_t length() const { return _length; }
 
 #ifndef SAJSON_NO_STD_STRING
     std::string as_string() const { return std::string(text, text + _length); }
@@ -268,7 +269,7 @@ public:
 
 private:
     const char* const text;
-    const size_t _length;
+    const std::size_t _length;
 
     string(); /*=delete*/
 };
@@ -277,7 +278,7 @@ private:
 /// at its first NUL character.
 class literal : public string {
 public:
-    template <size_t sz>
+    template <std::size_t sz>
     explicit literal(const char (&text_)[sz])
         : string(text_, sz - 1) {
         static_assert(sz > 0, "!");
@@ -298,7 +299,7 @@ public:
     /// that does not allocate a copy of the data or maintain its life.
     /// The given pointer must stay valid for the duration of the parse and the
     /// resulting \ref document's life.
-    mutable_string_view(size_t length, char* data_)
+    mutable_string_view(std::size_t length, char* data_)
         : length_(length)
         , data(data_)
         , buffer() {}
@@ -358,24 +359,24 @@ public:
         return *this;
     }
 
-    size_t length() const { return length_; }
+    std::size_t length() const { return length_; }
 
     char* get_data() const { return data; }
 
 private:
-    size_t length_;
+    std::size_t length_;
     char* data;
     internal::allocated_buffer buffer; // may not be allocated
 };
 
 namespace internal {
 struct object_key_record {
-    size_t key_start;
-    size_t key_end;
-    size_t value;
+    std::size_t key_start;
+    std::size_t key_end;
+    std::size_t value;
 
     bool match(const char* object_data, const string& str) const {
-        size_t length = key_end - key_start;
+        std::size_t length = key_end - key_start;
         return length == str.length()
             && 0 == memcmp(str.data(), object_data + key_start, length);
     }
@@ -386,8 +387,8 @@ struct object_key_comparator {
         : data(object_data) {}
 
     bool operator()(const object_key_record& lhs, const string& rhs) const {
-        const size_t lhs_length = lhs.key_end - lhs.key_start;
-        const size_t rhs_length = rhs.length();
+        const std::size_t lhs_length = lhs.key_end - lhs.key_start;
+        const std::size_t rhs_length = rhs.length();
         if (lhs_length < rhs_length) {
             return true;
         } else if (lhs_length > rhs_length) {
@@ -402,8 +403,8 @@ struct object_key_comparator {
 
     bool
     operator()(const object_key_record& lhs, const object_key_record& rhs) {
-        const size_t lhs_length = lhs.key_end - lhs.key_start;
-        const size_t rhs_length = rhs.key_end - rhs.key_start;
+        const std::size_t lhs_length = lhs.key_end - lhs.key_start;
+        const std::size_t rhs_length = rhs.key_end - rhs.key_start;
         if (lhs_length < rhs_length) {
             return true;
         } else if (lhs_length > rhs_length) {
@@ -420,13 +421,13 @@ struct object_key_comparator {
 namespace integer_storage {
 enum { word_length = 1 };
 
-inline int load(const size_t* location) {
+inline int load(const std::size_t* location) {
     int value;
     memcpy(&value, location, sizeof(value));
     return value;
 }
 
-inline void store(size_t* location, int value) {
+inline void store(std::size_t* location, int value) {
     // NOTE: Most modern compilers optimize away this constant-size
     // memcpy into a single instruction. If any don't, and treat
     // punning through a union as legal, they can be special-cased.
@@ -438,15 +439,15 @@ inline void store(size_t* location, int value) {
 } // namespace integer_storage
 
 namespace double_storage {
-enum { word_length = sizeof(double) / sizeof(size_t) };
+enum { word_length = sizeof(double) / sizeof(std::size_t) };
 
-inline double load(const size_t* location) {
+inline double load(const std::size_t* location) {
     double value;
     memcpy(&value, location, sizeof(double));
     return value;
 }
 
-inline void store(size_t* location, double value) {
+inline void store(std::size_t* location, double value) {
     // NOTE: Most modern compilers optimize away this constant-size
     // memcpy into a single instruction. If any don't, and treat
     // punning through a union as legal, they can be special-cased.
@@ -522,7 +523,7 @@ public:
 
     /// Returns the length of the object or array.
     /// Only legal if get_type() is TYPE_ARRAY or TYPE_OBJECT.
-    size_t get_length() const {
+    std::size_t get_length() const {
         assert_tag_2(tag::array, tag::object);
         return payload[0];
     }
@@ -530,35 +531,35 @@ public:
     /// Returns the nth element of an array.  Calling with an out-of-bound
     /// index is undefined behavior.
     /// Only legal if get_type() is TYPE_ARRAY.
-    value get_array_element(size_t index) const {
+    value get_array_element(std::size_t index) const {
         using namespace internal;
         assert_tag(tag::array);
-        size_t element = payload[1 + index];
+        std::size_t element = payload[1 + index];
         return value(
             get_element_tag(element),
             payload + get_element_value(element),
             text);
     }
 
-    value operator[](size_t index) const {
+    value operator[](std::size_t index) const {
         return get_array_element(index);
     }
 
     /// Returns the nth key of an object.  Calling with an out-of-bound
     /// index is undefined behavior.
     /// Only legal if get_type() is TYPE_OBJECT.
-    string get_object_key(size_t index) const {
+    string get_object_key(std::size_t index) const {
         assert_tag(tag::object);
-        const size_t* s = payload + 1 + index * 3;
+        const std::size_t* s = payload + 1 + index * 3;
         return string(text + s[0], s[1] - s[0]);
     }
 
     /// Returns the nth value of an object.  Calling with an out-of-bound
     /// index is undefined behavior.  Only legal if get_type() is TYPE_OBJECT.
-    value get_object_value(size_t index) const {
+    value get_object_value(std::size_t index) const {
         using namespace internal;
         assert_tag(tag::object);
-        size_t element = payload[3 + index * 3];
+        std::size_t element = payload[3 + index * 3];
         return value(
             get_element_tag(element),
             payload + get_element_value(element),
@@ -570,7 +571,7 @@ public:
     /// Only legal if get_type() is TYPE_OBJECT.
     value get_value_of_key(const string& key) const {
         assert_tag(tag::object);
-        size_t i = find_object_key(key);
+        std::size_t i = find_object_key(key);
         if (i < get_length()) {
             return get_object_value(i);
         } else {
@@ -602,10 +603,10 @@ public:
     /// one exists.  Returns get_length() if there is no such key.
     /// Note: sajson sorts object keys, so the running time is O(lg N).
     /// Only legal if get_type() is TYPE_OBJECT
-    size_t find_object_key(const string& key) const {
+    std::size_t find_object_key(const string& key) const {
         using namespace internal;
         assert_tag(tag::object);
-        size_t length = get_length();
+        std::size_t length = get_length();
         const object_key_record* start
             = reinterpret_cast<const object_key_record*>(payload + 1);
         const object_key_record* end = start + length;
@@ -616,7 +617,7 @@ public:
                 return i - start;
             }
         } else {
-            for (size_t i = 0; i < length; ++i) {
+            for (std::size_t i = 0; i < length; ++i) {
                 if (start[i].match(text, key)) {
                     return i;
                 }
@@ -706,7 +707,7 @@ public:
 
     /// Returns the length of the string.
     /// Only legal if get_type() is TYPE_STRING.
-    size_t get_string_length() const {
+    std::size_t get_string_length() const {
         assert_tag(tag::string);
         return payload[1] - payload[0];
     }
@@ -737,13 +738,13 @@ public:
 #endif
 
     /// \cond INTERNAL
-    const size_t* _internal_get_payload() const { return payload; }
+    const std::size_t* _internal_get_payload() const { return payload; }
     /// \endcond
 
 private:
     using tag = internal::tag;
 
-    explicit value(tag value_tag_, const size_t* payload_, const char* text_)
+    explicit value(tag value_tag_, const std::size_t* payload_, const char* text_)
         : value_tag(value_tag_)
         , payload(payload_)
         , text(text_) {}
@@ -754,10 +755,10 @@ private:
         assert(e1 == value_tag || e2 == value_tag);
     }
 
-    [[maybe_unused]] void assert_in_bounds(size_t i) const { assert(i < get_length()); }
+    [[maybe_unused]] void assert_in_bounds(std::size_t i) const { assert(i < get_length()); }
 
     const tag value_tag;
-    const size_t* const payload;
+    const std::size_t* const payload;
     const char* const text;
 
     friend class document;
@@ -798,7 +799,7 @@ public:
     ownership(const ownership&) = delete;
     void operator=(const ownership&) = delete;
 
-    explicit ownership(size_t* p_)
+    explicit ownership(std::size_t* p_)
         : p(p_) {}
 
     ownership(ownership&& p_) noexcept
@@ -811,7 +812,7 @@ public:
     bool is_valid() const { return !!p; }
 
 private:
-    size_t* p;
+    std::size_t* p;
 };
 
 inline const char* get_error_text(error error_code) {
@@ -919,11 +920,11 @@ public:
 
     /// If not is_valid(), returns the one-based line number where the parse
     /// failed.
-    size_t get_error_line() const { return error_line; }
+    std::size_t get_error_line() const { return error_line; }
 
     /// If not is_valid(), returns the one-based column number where the parse
     /// failed.
-    size_t get_error_column() const { return error_column; }
+    std::size_t get_error_column() const { return error_column; }
 
 #ifndef SAJSON_NO_STD_STRING
     /// If not is_valid(), returns a std::string indicating why the parse
@@ -958,7 +959,7 @@ public:
 
     // WARNING: Internal function exposed only for high-performance language
     // bindings.
-    const size_t* _internal_get_root() const { return root; }
+    const std::size_t* _internal_get_root() const { return root; }
 
     // WARNING: Internal function exposed only for high-performance language
     // bindings.
@@ -976,7 +977,7 @@ private:
         const mutable_string_view& input_,
         internal::ownership&& structure_,
         tag root_tag_,
-        const size_t* root_)
+        const std::size_t* root_)
         : input(input_)
         , structure(std::move(structure_))
         , root_tag(root_tag_)
@@ -990,8 +991,8 @@ private:
 
     explicit document(
         const mutable_string_view& input_,
-        size_t error_line_,
-        size_t error_column_,
+        std::size_t error_line_,
+        std::size_t error_column_,
         const error error_code_,
         int error_arg_)
         : input(input_)
@@ -1026,9 +1027,9 @@ private:
     mutable_string_view input;
     internal::ownership structure;
     const tag root_tag;
-    const size_t* const root;
-    const size_t error_line;
-    const size_t error_column;
+    const std::size_t* const root;
+    const std::size_t error_line;
+    const std::size_t error_column;
     const error error_code;
     const int error_arg;
 
@@ -1055,13 +1056,13 @@ public:
             : stack_bottom(other.stack_bottom)
             , stack_top(other.stack_top) {}
 
-        bool push(size_t element) {
+        bool push(std::size_t element) {
             *stack_top++ = element;
             return true;
         }
 
-        size_t* reserve(size_t amount, bool* success) {
-            size_t* rv = stack_top;
+        std::size_t* reserve(std::size_t amount, bool* success) {
+            std::size_t* rv = stack_top;
             stack_top += amount;
             *success = true;
             return rv;
@@ -1070,17 +1071,17 @@ public:
         // The compiler does not see the stack_head (stored in a local)
         // and the allocator (stored as a field) have the same stack_bottom
         // values, so it does a bit of redundant work.
-        // So there's a microoptimization available here: introduce a type
+        // So there's a micro-optimization available here: introduce a type
         // "stack_mark" and make it polymorphic on the allocator.  For
         // single_allocation, it merely needs to be a single pointer.
 
-        void reset(size_t new_top) { stack_top = stack_bottom + new_top; }
+        void reset(std::size_t new_top) { stack_top = stack_bottom + new_top; }
 
-        size_t get_size() { return stack_top - stack_bottom; }
+        std::size_t get_size() { return stack_top - stack_bottom; }
 
-        size_t* get_top() { return stack_top; }
+        std::size_t* get_top() { return stack_top; }
 
-        size_t* get_pointer_from_offset(size_t offset) {
+        std::size_t* get_pointer_from_offset(std::size_t offset) {
             return stack_bottom + offset;
         }
 
@@ -1089,12 +1090,12 @@ public:
         stack_head(const stack_head&) = delete;
         void operator=(const stack_head&) = delete;
 
-        explicit stack_head(size_t* base)
+        explicit stack_head(std::size_t* base)
             : stack_bottom(base)
             , stack_top(base) {}
 
-        size_t* const stack_bottom;
-        size_t* stack_top;
+        std::size_t* const stack_bottom;
+        std::size_t* stack_top;
 
         friend class single_allocation;
     };
@@ -1106,7 +1107,7 @@ public:
         void operator=(const allocator&) = delete;
 
         explicit allocator(
-            size_t* buffer, size_t input_size, bool should_deallocate_)
+            std::size_t* buffer, std::size_t input_size, bool should_deallocate_)
             : structure(buffer)
             , structure_end(buffer ? buffer + input_size : 0)
             , write_cursor(structure_end)
@@ -1140,17 +1141,17 @@ public:
             return stack_head(structure);
         }
 
-        size_t get_write_offset() { return structure_end - write_cursor; }
+        std::size_t get_write_offset() { return structure_end - write_cursor; }
 
-        size_t* get_write_pointer_of(size_t v) { return structure_end - v; }
+        std::size_t* get_write_pointer_of(std::size_t v) { return structure_end - v; }
 
-        size_t* reserve(size_t size, bool* success) {
+        std::size_t* reserve(std::size_t size, bool* success) {
             *success = true;
             write_cursor -= size;
             return write_cursor;
         }
 
-        size_t* get_ast_root() { return write_cursor; }
+        std::size_t* get_ast_root() { return write_cursor; }
 
         internal::ownership transfer_ownership() {
             auto p = structure;
@@ -1165,9 +1166,9 @@ public:
         }
 
     private:
-        size_t* structure;
-        size_t* structure_end;
-        size_t* write_cursor;
+        std::size_t* structure;
+        std::size_t* structure_end;
+        std::size_t* write_cursor;
         bool should_deallocate;
     };
 
@@ -1184,21 +1185,21 @@ public:
     /// memory error if the buffer is not guaranteed to be big enough for
     /// the document.  The caller must guarantee the memory is valid for
     /// the duration of the parse and the AST traversal.
-    single_allocation(size_t* existing_buffer_, size_t size_in_words)
+    single_allocation(std::size_t* existing_buffer_, std::size_t size_in_words)
         : has_existing_buffer(true)
         , existing_buffer(existing_buffer_)
         , existing_buffer_size(size_in_words) {}
 
-    /// Convenience wrapper for single_allocation(size_t*, size_t) that
+    /// Convenience wrapper for single_allocation(std::size_t*, std::size_t) that
     /// automatically infers the length of a given array.
-    template <size_t N>
-    explicit single_allocation(size_t (&existing_buffer_)[N])
+    template <std::size_t N>
+    explicit single_allocation(std::size_t (&existing_buffer_)[N])
         : single_allocation(existing_buffer_, N) {}
 
     /// \cond INTERNAL
 
     allocator
-    make_allocator(size_t input_document_size_in_bytes, bool* succeeded) const {
+    make_allocator(std::size_t input_document_size_in_bytes, bool* succeeded) const {
         if (has_existing_buffer) {
             if (existing_buffer_size < input_document_size_in_bytes) {
                 *succeeded = false;
@@ -1208,8 +1209,8 @@ public:
             return allocator(
                 existing_buffer, input_document_size_in_bytes, false);
         } else {
-            size_t* buffer
-                = new (std::nothrow) size_t[input_document_size_in_bytes];
+            std::size_t* buffer
+                = new (std::nothrow) std::size_t[input_document_size_in_bytes];
             if (!buffer) {
                 *succeeded = false;
                 return allocator(nullptr);
@@ -1223,8 +1224,8 @@ public:
 
 private:
     bool has_existing_buffer;
-    size_t* existing_buffer;
-    size_t existing_buffer_size;
+    std::size_t* existing_buffer;
+    std::size_t existing_buffer_size;
 };
 
 /// Allocation policy that uses dynamically-growing buffers for both the
@@ -1247,7 +1248,7 @@ public:
 
         ~stack_head() { delete[] stack_bottom; }
 
-        bool push(size_t element) {
+        bool push(std::size_t element) {
             if (can_grow(1)) {
                 *stack_top++ = element;
                 return true;
@@ -1256,9 +1257,9 @@ public:
             }
         }
 
-        size_t* reserve(size_t amount, bool* success) {
+        std::size_t* reserve(std::size_t amount, bool* success) {
             if (can_grow(amount)) {
-                size_t* rv = stack_top;
+                std::size_t* rv = stack_top;
                 stack_top += amount;
                 *success = true;
                 return rv;
@@ -1268,13 +1269,13 @@ public:
             }
         }
 
-        void reset(size_t new_top) { stack_top = stack_bottom + new_top; }
+        void reset(std::size_t new_top) { stack_top = stack_bottom + new_top; }
 
-        size_t get_size() { return stack_top - stack_bottom; }
+        std::size_t get_size() { return stack_top - stack_bottom; }
 
-        size_t* get_top() { return stack_top; }
+        std::size_t* get_top() { return stack_top; }
 
-        size_t* get_pointer_from_offset(size_t offset) {
+        std::size_t* get_pointer_from_offset(std::size_t offset) {
             return stack_bottom + offset;
         }
 
@@ -1282,9 +1283,9 @@ public:
         stack_head(const stack_head&) = delete;
         void operator=(const stack_head&) = delete;
 
-        explicit stack_head(size_t initial_capacity, bool* success) {
+        explicit stack_head(std::size_t initial_capacity, bool* success) {
             assert(initial_capacity);
-            stack_bottom = new (std::nothrow) size_t[initial_capacity];
+            stack_bottom = new (std::nothrow) std::size_t[initial_capacity];
             stack_top = stack_bottom;
             if (stack_bottom) {
                 stack_limit = stack_bottom + initial_capacity;
@@ -1294,19 +1295,19 @@ public:
             *success = !!stack_bottom;
         }
 
-        bool can_grow(size_t amount) {
+        bool can_grow(std::size_t amount) {
             if (SAJSON_LIKELY(
-                    amount <= static_cast<size_t>(stack_limit - stack_top))) {
+                    amount <= static_cast<std::size_t>(stack_limit - stack_top))) {
                 return true;
             }
 
-            size_t current_size = stack_top - stack_bottom;
-            size_t old_capacity = stack_limit - stack_bottom;
-            size_t new_capacity = old_capacity * 2;
+            std::size_t current_size = stack_top - stack_bottom;
+            std::size_t old_capacity = stack_limit - stack_bottom;
+            std::size_t new_capacity = old_capacity * 2;
             while (new_capacity < amount + current_size) {
                 new_capacity *= 2;
             }
-            size_t* new_stack = new (std::nothrow) size_t[new_capacity];
+            std::size_t* new_stack = new (std::nothrow) std::size_t[new_capacity];
             if (!new_stack) {
                 stack_top = 0;
                 stack_bottom = 0;
@@ -1314,7 +1315,7 @@ public:
                 return false;
             }
 
-            memcpy(new_stack, stack_bottom, current_size * sizeof(size_t));
+            memcpy(new_stack, stack_bottom, current_size * sizeof(std::size_t));
             delete[] stack_bottom;
             stack_top = new_stack + current_size;
             stack_bottom = new_stack;
@@ -1322,9 +1323,9 @@ public:
             return true;
         }
 
-        size_t* stack_top; // stack grows up: stack_top >= stack_bottom
-        size_t* stack_bottom;
-        size_t* stack_limit;
+        std::size_t* stack_top; // stack grows up: stack_top >= stack_bottom
+        std::size_t* stack_bottom;
+        std::size_t* stack_limit;
 
         friend class dynamic_allocation;
     };
@@ -1336,9 +1337,9 @@ public:
         void operator=(const allocator&) = delete;
 
         explicit allocator(
-            size_t* buffer_,
-            size_t current_capacity,
-            size_t initial_stack_capacity_)
+            std::size_t* buffer_,
+            std::size_t current_capacity,
+            std::size_t initial_stack_capacity_)
             : ast_buffer_bottom(buffer_)
             , ast_buffer_top(buffer_ + current_capacity)
             , ast_write_head(ast_buffer_top)
@@ -1366,11 +1367,11 @@ public:
             return stack_head(initial_stack_capacity, success);
         }
 
-        size_t get_write_offset() { return ast_buffer_top - ast_write_head; }
+        std::size_t get_write_offset() { return ast_buffer_top - ast_write_head; }
 
-        size_t* get_write_pointer_of(size_t v) { return ast_buffer_top - v; }
+        std::size_t* get_write_pointer_of(std::size_t v) { return ast_buffer_top - v; }
 
-        size_t* reserve(size_t size, bool* success) {
+        std::size_t* reserve(std::size_t size, bool* success) {
             if (can_grow(size)) {
                 ast_write_head -= size;
                 *success = true;
@@ -1381,7 +1382,7 @@ public:
             }
         }
 
-        size_t* get_ast_root() { return ast_write_head; }
+        std::size_t* get_ast_root() { return ast_write_head; }
 
         internal::ownership transfer_ownership() {
             auto p = ast_buffer_bottom;
@@ -1392,22 +1393,22 @@ public:
         }
 
     private:
-        bool can_grow(size_t amount) {
+        bool can_grow(std::size_t amount) {
             if (SAJSON_LIKELY(
-                    amount <= static_cast<size_t>(
+                    amount <= static_cast<std::size_t>(
                                   ast_write_head - ast_buffer_bottom))) {
                 return true;
             }
-            size_t current_capacity = ast_buffer_top - ast_buffer_bottom;
+            std::size_t current_capacity = ast_buffer_top - ast_buffer_bottom;
 
-            size_t current_size = ast_buffer_top - ast_write_head;
-            size_t new_capacity = current_capacity * 2;
+            std::size_t current_size = ast_buffer_top - ast_write_head;
+            std::size_t new_capacity = current_capacity * 2;
             while (new_capacity < amount + current_size) {
                 new_capacity *= 2;
             }
 
-            size_t* old_buffer = ast_buffer_bottom;
-            size_t* new_buffer = new (std::nothrow) size_t[new_capacity];
+            std::size_t* old_buffer = ast_buffer_bottom;
+            std::size_t* new_buffer = new (std::nothrow) std::size_t[new_capacity];
             if (!new_buffer) {
                 ast_buffer_bottom = 0;
                 ast_buffer_top = 0;
@@ -1415,22 +1416,22 @@ public:
                 return false;
             }
 
-            const size_t* old_write_head = ast_write_head;
+            const std::size_t* old_write_head = ast_write_head;
             ast_buffer_bottom = new_buffer;
             ast_buffer_top = new_buffer + new_capacity;
             ast_write_head = ast_buffer_top - current_size;
             memcpy(
-                ast_write_head, old_write_head, current_size * sizeof(size_t));
+                ast_write_head, old_write_head, current_size * sizeof(std::size_t));
             delete[] old_buffer;
 
             return true;
         }
 
-        size_t*
+        std::size_t*
             ast_buffer_bottom; // base address of the ast buffer - it grows down
-        size_t* ast_buffer_top;
-        size_t* ast_write_head;
-        size_t initial_stack_capacity;
+        std::size_t* ast_buffer_top;
+        std::size_t* ast_write_head;
+        std::size_t initial_stack_capacity;
     };
 
     /// \endcond
@@ -1438,27 +1439,27 @@ public:
     /// Creates a dynamic_allocation policy with the given initial AST
     /// and stack buffer sizes.
     explicit dynamic_allocation(
-        size_t initial_ast_capacity_ = 0, size_t initial_stack_capacity_ = 0)
+        std::size_t initial_ast_capacity_ = 0, std::size_t initial_stack_capacity_ = 0)
         : initial_ast_capacity(initial_ast_capacity_)
         , initial_stack_capacity(initial_stack_capacity_) {}
 
     /// \cond INTERNAL
 
     allocator
-    make_allocator(size_t input_document_size_in_bytes, bool* succeeded) const {
-        size_t capacity = initial_ast_capacity;
+    make_allocator(std::size_t input_document_size_in_bytes, bool* succeeded) const {
+        std::size_t capacity = initial_ast_capacity;
         if (!capacity) {
             // TODO: guess based on input document size
             capacity = 1024;
         }
 
-        size_t* buffer = new (std::nothrow) size_t[capacity];
+        std::size_t* buffer = new (std::nothrow) std::size_t[capacity];
         if (!buffer) {
             *succeeded = false;
             return allocator(nullptr);
         }
 
-        size_t stack_capacity = initial_stack_capacity;
+        std::size_t stack_capacity = initial_stack_capacity;
         if (!stack_capacity) {
             stack_capacity = 256;
         }
@@ -1470,8 +1471,8 @@ public:
     /// \endcond
 
 private:
-    size_t initial_ast_capacity;
-    size_t initial_stack_capacity;
+    std::size_t initial_ast_capacity;
+    std::size_t initial_stack_capacity;
 };
 
 /// Allocation policy that attempts to fit the parsed AST into an existing
@@ -1491,7 +1492,7 @@ public:
             other.source_allocator = 0;
         }
 
-        bool push(size_t element) {
+        bool push(std::size_t element) {
             if (SAJSON_LIKELY(source_allocator->can_grow(1))) {
                 *(source_allocator->stack_top)++ = element;
                 return true;
@@ -1500,9 +1501,9 @@ public:
             }
         }
 
-        size_t* reserve(size_t amount, bool* success) {
+        std::size_t* reserve(std::size_t amount, bool* success) {
             if (SAJSON_LIKELY(source_allocator->can_grow(amount))) {
-                size_t* rv = source_allocator->stack_top;
+                std::size_t* rv = source_allocator->stack_top;
                 source_allocator->stack_top += amount;
                 *success = true;
                 return rv;
@@ -1512,17 +1513,17 @@ public:
             }
         }
 
-        void reset(size_t new_top) {
+        void reset(std::size_t new_top) {
             source_allocator->stack_top = source_allocator->structure + new_top;
         }
 
-        size_t get_size() {
+        std::size_t get_size() {
             return source_allocator->stack_top - source_allocator->structure;
         }
 
-        size_t* get_top() { return source_allocator->stack_top; }
+        std::size_t* get_top() { return source_allocator->stack_top; }
 
-        size_t* get_pointer_from_offset(size_t offset) {
+        std::size_t* get_pointer_from_offset(std::size_t offset) {
             return source_allocator->structure + offset;
         }
 
@@ -1544,7 +1545,7 @@ public:
         allocator(const allocator&) = delete;
         void operator=(const allocator&) = delete;
 
-        explicit allocator(size_t* existing_buffer, size_t existing_buffer_size)
+        explicit allocator(std::size_t* existing_buffer, std::size_t existing_buffer_size)
             : structure(existing_buffer)
             , structure_end(existing_buffer + existing_buffer_size)
             , write_cursor(structure_end)
@@ -1566,11 +1567,11 @@ public:
             return stack_head(this);
         }
 
-        size_t get_write_offset() { return structure_end - write_cursor; }
+        std::size_t get_write_offset() { return structure_end - write_cursor; }
 
-        size_t* get_write_pointer_of(size_t v) { return structure_end - v; }
+        std::size_t* get_write_pointer_of(std::size_t v) { return structure_end - v; }
 
-        size_t* reserve(size_t size, bool* success) {
+        std::size_t* reserve(std::size_t size, bool* success) {
             if (can_grow(size)) {
                 write_cursor -= size;
                 *success = true;
@@ -1581,7 +1582,7 @@ public:
             }
         }
 
-        size_t* get_ast_root() { return write_cursor; }
+        std::size_t* get_ast_root() { return write_cursor; }
 
         internal::ownership transfer_ownership() {
             structure = 0;
@@ -1591,16 +1592,16 @@ public:
         }
 
     private:
-        bool can_grow(size_t amount) {
+        bool can_grow(std::size_t amount) {
             // invariant: stack_top <= write_cursor
             // thus: write_cursor - stack_top is positive
-            return static_cast<size_t>(write_cursor - stack_top) >= amount;
+            return static_cast<std::size_t>(write_cursor - stack_top) >= amount;
         }
 
-        size_t* structure;
-        size_t* structure_end;
-        size_t* write_cursor;
-        size_t* stack_top;
+        std::size_t* structure;
+        std::size_t* structure_end;
+        std::size_t* write_cursor;
+        std::size_t* stack_top;
 
         friend class bounded_allocation;
     };
@@ -1610,20 +1611,20 @@ public:
     /// Uses an existing buffer to hold the parsed AST, if it fits.  The
     /// specified buffer must not be deallocated until after the document
     /// is parsed and the AST traversed.
-    bounded_allocation(size_t* existing_buffer_, size_t size_in_words)
+    bounded_allocation(std::size_t* existing_buffer_, std::size_t size_in_words)
         : existing_buffer(existing_buffer_)
         , existing_buffer_size(size_in_words) {}
 
-    /// Convenience wrapper for bounded_allocation(size_t*, size) that
+    /// Convenience wrapper for bounded_allocation(std::size_t*, size) that
     /// automatically infers the size of the given array.
-    template <size_t N>
-    explicit bounded_allocation(size_t (&existing_buffer_)[N])
+    template <std::size_t N>
+    explicit bounded_allocation(std::size_t (&existing_buffer_)[N])
         : bounded_allocation(existing_buffer_, N) {}
 
     /// \cond INTERNAL
 
     allocator
-    make_allocator(size_t input_document_size_in_bytes, bool* succeeded) const {
+    make_allocator(std::size_t input_document_size_in_bytes, bool* succeeded) const {
         *succeeded = true;
         return allocator(existing_buffer, existing_buffer_size);
     }
@@ -1631,8 +1632,8 @@ public:
     /// \endcond
 
 private:
-    size_t* existing_buffer;
-    size_t existing_buffer_size;
+    std::size_t* existing_buffer;
+    std::size_t existing_buffer_size;
 };
 
 // I thought about putting parser in the internal namespace but I don't
@@ -1651,7 +1652,7 @@ public:
 
     document get_document() {
         if (parse()) {
-            const size_t* ast_root = allocator.get_ast_root();
+            const std::size_t* ast_root = allocator.get_ast_root();
             return document(
                 input, allocator.transfer_ownership(), root_tag, ast_root);
         } else {
@@ -1669,7 +1670,7 @@ private:
     bool at_eof(const char* p) { return p == input_end; }
 
     char* skip_whitespace(char* p) {
-        // There is an opportunity to make better use of superscalar
+        // There is an opportunity to make better use of super-scalar
         // hardware here* but if someone cares about JSON parsing
         // performance the first thing they do is minify, so prefer
         // to optimize for code size here.
@@ -1751,7 +1752,7 @@ private:
 
         // current_base is an offset to the first element of the current
         // structure (object or array)
-        size_t current_base = stack.get_size();
+        std::size_t current_base = stack.get_size();
         tag current_structure_tag;
         if (*p == '[') {
             current_structure_tag = tag::array;
@@ -1776,7 +1777,7 @@ private:
 
         // BEGIN STATE MACHINE
 
-        size_t pop_element; // used as an argument into the `pop` routine
+        std::size_t pop_element; // used as an argument into the `pop` routine
 
         if (0) { // purely for structure
 
@@ -1840,7 +1841,7 @@ private:
         // ASSUMES: *p == '}'
         pop_object : {
             ++p;
-            size_t* base_ptr = stack.get_pointer_from_offset(current_base);
+            std::size_t* base_ptr = stack.get_pointer_from_offset(current_base);
             pop_element = *base_ptr;
             if (SAJSON_UNLIKELY(
                     !install_object(base_ptr + 1, stack.get_top()))) {
@@ -1852,7 +1853,7 @@ private:
         // ASSUMES: *p == ']'
         pop_array : {
             ++p;
-            const size_t* base_ptr = stack.get_pointer_from_offset(current_base);
+            const std::size_t* base_ptr = stack.get_pointer_from_offset(current_base);
             pop_element = *base_ptr;
             if (SAJSON_UNLIKELY(
                     !install_array(base_ptr + 1, stack.get_top()))) {
@@ -1871,7 +1872,7 @@ private:
                 return make_error(p, ERROR_MISSING_OBJECT_KEY);
             }
             bool success_;
-            size_t* out = stack.reserve(2, &success_);
+            std::size_t* out = stack.reserve(2, &success_);
             if (SAJSON_UNLIKELY(!success_)) {
                 return oom(p, "reserve for object key");
             }
@@ -1940,7 +1941,7 @@ private:
             }
             case '"': {
                 bool success_;
-                size_t* string_tag = allocator.reserve(2, &success_);
+                std::size_t* string_tag = allocator.reserve(2, &success_);
                 if (SAJSON_UNLIKELY(!success_)) {
                     return oom(p, "reserve for string tag");
                 }
@@ -1953,7 +1954,7 @@ private:
             }
 
             case '[': {
-                size_t previous_base = current_base;
+                std::size_t previous_base = current_base;
                 current_base = stack.get_size();
                 bool s = stack.push(
                     make_element(current_structure_tag, previous_base));
@@ -1964,7 +1965,7 @@ private:
                 goto array_close_or_element;
             }
             case '{': {
-                size_t previous_base = current_base;
+                std::size_t previous_base = current_base;
                 current_base = stack.get_size();
                 bool s = stack.push(
                     make_element(current_structure_tag, previous_base));
@@ -1975,7 +1976,7 @@ private:
                 goto object_close_or_element;
             }
             pop : {
-                size_t parent = get_element_value(pop_element);
+                std::size_t parent = get_element_value(pop_element);
                 if (parent == ROOT_MARKER) {
                     root_tag = current_structure_tag;
                     p = skip_whitespace(p);
@@ -2306,7 +2307,7 @@ private:
         }
         if (try_double) {
             bool success;
-            size_t* out
+            std::size_t* out
                 = allocator.reserve(double_storage::word_length, &success);
             if (SAJSON_UNLIKELY(!success)) {
                 return std::make_pair(oom(p, "double"), tag::null);
@@ -2315,7 +2316,7 @@ private:
             return std::make_pair(p, tag::double_);
         } else {
             bool success;
-            size_t* out
+            std::size_t* out
                 = allocator.reserve(integer_storage::word_length, &success);
             if (SAJSON_UNLIKELY(!success)) {
                 return std::make_pair(oom(p, "integer"), tag::null);
@@ -2325,35 +2326,35 @@ private:
         }
     }
 
-    bool install_array(const size_t* array_base, const size_t* array_end) {
+    bool install_array(const std::size_t* array_base, const std::size_t* array_end) {
         using namespace sajson::internal;
 
-        const size_t length = array_end - array_base;
+        const std::size_t length = array_end - array_base;
         bool success;
-        size_t* const new_base = allocator.reserve(length + 1, &success);
+        std::size_t* const new_base = allocator.reserve(length + 1, &success);
         if (SAJSON_UNLIKELY(!success)) {
             return false;
         }
-        size_t* out = new_base + length + 1;
-        const size_t* const structure_end = allocator.get_write_pointer_of(0);
+        std::size_t* out = new_base + length + 1;
+        const std::size_t* const structure_end = allocator.get_write_pointer_of(0);
 
         while (array_end > array_base) {
-            size_t element = *--array_end;
+            std::size_t element = *--array_end;
             tag element_type = get_element_tag(element);
-            size_t element_value = get_element_value(element);
-            const size_t* element_ptr = structure_end - element_value;
+            std::size_t element_value = get_element_value(element);
+            const std::size_t* element_ptr = structure_end - element_value;
             *--out = make_element(element_type, element_ptr - new_base);
         }
         *--out = length;
         return true;
     }
 
-    bool install_object(size_t* object_base, size_t* object_end) {
+    bool install_object(std::size_t* object_base, std::size_t* object_end) {
         using namespace internal;
 
         assert((object_end - object_base) % 3 == 0);
-        const size_t length_times_3 = object_end - object_base;
-        const size_t length = length_times_3 / 3;
+        const std::size_t length_times_3 = object_end - object_base;
+        const std::size_t length = length_times_3 / 3;
         if (SAJSON_UNLIKELY(should_binary_search(length))) {
             std::sort(
                 reinterpret_cast<object_key_record*>(object_base),
@@ -2362,19 +2363,19 @@ private:
         }
 
         bool success;
-        size_t* const new_base
+        std::size_t* const new_base
             = allocator.reserve(length_times_3 + 1, &success);
         if (SAJSON_UNLIKELY(!success)) {
             return false;
         }
-        size_t* out = new_base + length_times_3 + 1;
-        const size_t* const structure_end = allocator.get_write_pointer_of(0);
+        std::size_t* out = new_base + length_times_3 + 1;
+        const std::size_t* const structure_end = allocator.get_write_pointer_of(0);
 
         while (object_end > object_base) {
-            size_t element = *--object_end;
+            std::size_t element = *--object_end;
             tag element_type = get_element_tag(element);
-            size_t element_value = get_element_value(element);
-            const size_t* element_ptr = structure_end - element_value;
+            std::size_t element_value = get_element_value(element);
+            const std::size_t* element_ptr = structure_end - element_value;
 
             *--out = make_element(element_type, element_ptr - new_base);
             *--out = *--object_end;
@@ -2384,11 +2385,11 @@ private:
         return true;
     }
 
-    char* parse_string(char* p, size_t* tag) {
+    char* parse_string(char* p, std::size_t* tag) {
         using namespace internal;
 
         ++p; // "
-        size_t start = p - input.get_data();
+        std::size_t start = p - input.get_data();
         const char* input_end_local = input_end;
         while (input_end_local - p >= 4) {
             if (!is_plain_string_character(p[0])) {
@@ -2475,7 +2476,7 @@ private:
         }
     }
 
-    char* parse_string_slow(char* p, size_t* tag, size_t start) {
+    char* parse_string_slow(char* p, std::size_t* tag, std::size_t start) {
         char* end = p;
         const char* input_end_local = input_end;
 
@@ -2643,8 +2644,8 @@ private:
     Allocator allocator;
 
     internal::tag root_tag;
-    size_t error_line{0};
-    size_t error_column{0};
+    std::size_t error_line{0};
+    std::size_t error_column{0};
     error error_code{ERROR_NO_ERROR};
     int error_arg{0}; // optional argument for the error
 };

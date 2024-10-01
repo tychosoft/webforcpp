@@ -11,4 +11,3 @@
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int { // NOLINT
     auto client = web::https::make_client("https://localhost");
 }
-
