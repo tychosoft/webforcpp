@@ -39,7 +39,7 @@ inline auto get_client(httplib::Client& ctx, const std::string& path) {
     auto result = ctx.Get(path);
     if(!result)
         throw bad_client(result.error(), "Internal failure");
-    auto response = result.value();
+    auto response(result.value());
     if(result.error() != error::Success)
         throw bad_client(result.error(), httplib::status_message(response.status));
     return response;

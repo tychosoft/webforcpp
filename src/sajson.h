@@ -633,7 +633,7 @@ public:
         return integer_storage::load(payload);
     }
 
-    int to_int() {
+    int to_int() const {
         return get_integer_value();
     }
 
@@ -1007,13 +1007,13 @@ private:
         int written = has_significant_error_arg()
             ? SAJSON_snprintf(
                   formatted_error_message,
-                  ERROR_BUFFER_LENGTH - 1,
+                  std::size_t(ERROR_BUFFER_LENGTH - 1),
                   "%s: %d",
                   _internal_get_error_text(),
                   error_arg)
             : SAJSON_snprintf(
                   formatted_error_message,
-                  ERROR_BUFFER_LENGTH - 1,
+                  std::size_t(ERROR_BUFFER_LENGTH - 1),
                   "%s",
                   _internal_get_error_text());
         (void)written;
@@ -1081,7 +1081,7 @@ public:
 
         std::size_t* get_top() { return stack_top; }
 
-        std::size_t* get_pointer_from_offset(std::size_t offset) {
+        std::size_t* get_pointer_from_offset(std::size_t offset) const {
             return stack_bottom + offset;
         }
 

@@ -29,7 +29,7 @@ file(GLOB markdown *.md)
 file(GLOB headers src/*.hpp src/*.h)
 
 # Setup headers
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 configure_file(webforcpp.pc.in webforcpp.pc)
 
 # Testing

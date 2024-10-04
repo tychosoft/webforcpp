@@ -2,16 +2,16 @@
 
 This package offers modern web access using header-only libraries for C++17.
 This includes the httplib.h header-only library for http(s) clients and
-servers, and a linted sajason.h for jason parsing. In addition, supplemental
+servers, and a linted sajson.h for json parsing. In addition, supplemental
 header-only libraries that access various specific web api services will also
 be added. The core dependencies only required C++11, but our extensions and
 api headers may require C++17.
 
-This choice of using httplib and sajason was for very generic cross-platform
+This choice of using httplib and sajson was for very generic cross-platform
 functionality, https functionality built around openssl, and broad licensing
 compatibility. The collective work functions in effect on a MIT license, which
-httplib and any additional api headers use. The sajason license is fully
-permissive as long as the copyright notice is kept in the sajason header.
+httplib and any additional api headers use. The sajson license is fully
+permissive as long as the copyright notice is kept in the sajson header.
 
 WebForCPP requires CMake to build. It should build and work with GCC (9 or
 later), with Clang (14? or later), and MSVC.  Besides GNU/Linux and BSD
