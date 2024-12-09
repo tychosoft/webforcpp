@@ -5,6 +5,8 @@
 #define WEB_UTILITY_HPP_
 
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include <cstdint>
 #include <cstring>
 
@@ -192,5 +194,41 @@ public:
 protected:
     struct sockaddr_storage store_{AF_UNSPEC};
 };
+
+inline auto url_encode(const std::string &text) {
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex;
+
+    for(const char ch : text) {
+        if(isalnum(static_cast<unsigned char>(ch)) || ch == '-' || ch == '_' || ch == '.' || ch == '~')
+            escaped << ch;
+        else
+            escaped << '%' << std::setw(2) << static_cast<int>(static_cast<unsigned char>(ch));
+    }
+    return escaped.str();
+}
+
+inline auto url_decode(const std::string &text) {
+    std::string decoded;
+    size_t pos = 0;
+
+    while(pos < text.length()) {
+        if(text[pos] == '%' && pos + 2 < text.length() && isxdigit(text[pos + 1]) && isxdigit(text[pos + 2])) {
+            auto ch = static_cast<char>(std::stoi(text.substr(pos + 1, 2), nullptr, 16));
+            decoded += ch;
+            pos += 3;
+        } else if (text[pos] == '+') {
+            decoded += ' ';
+            pos++;
+        } else {
+            decoded += text[pos];
+            pos++;
+        }
+    }
+    return decoded;
+}
+
+
 } // end namespace
 #endif
