@@ -15,7 +15,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB LINT_SOURCES
     RELATIVE ${PROJECT_SOURCE_DIR}
-    src/json.hpp test/*.cpp)
+    src/utils.hpp src/json.hpp test/*.cpp)
 
 include(cmake/custom.cmake OPTIONAL)
 include(cmake/project.cmake)

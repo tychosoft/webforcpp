@@ -27,6 +27,10 @@ A fast and efficient json parser. This is meant for web api's that use json. A
 number of convenience methods have been added to sajason.h to make it easer to
 express and use.
 
+### utils.hpp
+
+This provides various miscellanous convience classes and functions.
+
 ## API servers
 
 Each supported internet api will be given it's own header in webforcpp. These
