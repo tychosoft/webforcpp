@@ -5,7 +5,7 @@ This includes the httplib.h header-only library for http(s) clients and
 servers, and a linted sajson.h for json parsing. In addition, supplemental
 header-only libraries that access various specific web api services will also
 be added. The core dependencies only required C++11, but our extensions and
-api headers may require C++17.
+api headers may only support C++17 and later.
 
 This choice of using httplib and sajson was for very generic cross-platform
 functionality, https functionality built around openssl, and broad licensing
@@ -38,26 +38,27 @@ these dependencies correctly from CMake.
 ## Distributions
 
 Distributions of this package are provided as detached source tarballs made
-from a tagged release from our internal source repository. These stand-alone
-detached tarballs can be used to make packages for many GNU/Linux systems, and
-for BSD ports. They may also be used to build and install the software directly
-on a target platform.
+from a tagged release from our public gitlab repository or by building the dist
+target. These stand-alone detached tarballs can be used to make packages for
+many GNU/Linux systems, and for BSD ports. They may also be used to build and
+install the software directly on a target platform.
 
-The latest release source tarball is found at either
-https://www.tychosoft.com/tychosoft/-/packages/generic/webforcpp or thru an
-auto-generated tarball from the projects public gitlab release page, both which
-provides access to past releases as well.
+The latest public release source tarball can be produced by an auto-generated
+tarball from a tagged release in the projects public git repository at
+https://gitlab.com/tychosoft/webforcpp. Webforcpp can also be easily vendored
+in other software using git modules from this public repo. I also package
+Webforcpp for Alpine Linux. There is no reason this cannot easily be packaged
+for use on other distributions, for BSD ports, vcpkg, etc, as well.
 
 ## Participation
 
 This project is offered as free (as in freedom) software for public use and has
 a public project page at https://www.gitlab.com/tychosoft/webforcpp which has
-an issue tracker where people can submit public bug reports, a wiki for hosting
-project documentation, and a public git repository. Patches and merge
-requests may be submitted in the issue tracker or thru email. Support requests
-and other kinds of inquiries may also be sent thru the tychosoft gitlab help
-desktop service. Other details about participation may be found in the
-Contributing page.
+an issue tracker where people can submit public bug reports and a public git
+repository. Patches and merge requests may be submitted in the issue tracker
+or thru email. Support requests and other kinds of inquiries may also be sent
+thru the tychosoft gitlab help desktop service. Other details about
+participation may be found in CONTRIBUTING.md.
 
 ## Testing
 

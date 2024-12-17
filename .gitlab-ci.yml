@@ -2,9 +2,10 @@ stages:
   - test
 
 merge:
-  image: alpine
+  image: alpine:edge
   stage: test
   script:
+    - apk update
     - apk add alpine-sdk cmake openssl-dev
     - CXXFLAGS=-Werror cmake -DCMAKE_BUILD_TYPE=Debug .
     - make | tee make.log
