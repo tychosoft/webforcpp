@@ -19,10 +19,13 @@ class bad_client final : public std::exception {
 public:
     bad_client() = delete;
     bad_client(const bad_client& other) = default;
-    explicit bad_client(error code, const char *msg) : err_(code), msg_(msg) {}
+
+    explicit bad_client(error code, const char *msg) noexcept : 
+    err_(code), msg_(msg) {}
+
     auto operator=(const bad_client&) -> auto& = delete;
 
-    auto err() const {
+    auto err() const noexcept {
         return err_;
     }
 
@@ -37,11 +40,9 @@ private:
 
 inline auto get_client(httplib::Client& ctx, const std::string& path) {
     auto result = ctx.Get(path);
-    if(!result)
-        throw bad_client(result.error(), "Internal failure");
+    if(!result) throw bad_client(result.error(), "Internal failure");
     auto response(result.value());
-    if(result.error() != error::Success)
-        throw bad_client(result.error(), httplib::status_message(response.status));
+    if(result.error() != error::Success) throw bad_client(result.error(), httplib::status_message(response.status));
     return response;
 }
 

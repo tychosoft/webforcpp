@@ -185,7 +185,7 @@ public:
         struct addrinfo *list{nullptr};
         auto result = getaddrinfo(host.c_str(), service, &hints, &list);
         if(list && !result)
-            memcpy(&address.store_, list->ai_addr, list->ai_addrlen);
+            memcpy(&address.store_, list->ai_addr, list->ai_addrlen); // FlawFinder: ignore
         if(list)
             freeaddrinfo(list);
         return address;
@@ -228,7 +228,5 @@ inline auto url_decode(const std::string &text) {
     }
     return decoded;
 }
-
-
 } // end namespace
 #endif
