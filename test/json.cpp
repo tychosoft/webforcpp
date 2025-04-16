@@ -27,4 +27,15 @@ auto main([[maybe_unused]] int argc, [[maybe_unused]] char **argv) -> int {
     const std::string s2(text);
     const auto& json2 = parse(*ast2, make_view(s2));
     assert(json2.is_valid());
+
+    try {
+        const spec_t spec = {"name", "age", "dead"};
+        const auto out = make_json(spec, "David", 20, false);
+        assert(out == R"({"name":"David","age":20,"dead":false})");
+        assert(make_objects(spec, false) == "[name,age,dead]");
+        assert(make_array(spec, false) == R"(["name","age","dead"])");
+    }
+    catch(...) {
+        return -1;
+    }
 }

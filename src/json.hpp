@@ -6,11 +6,15 @@
 
 #include "sajson.h"
 
+#include <sstream>
+#include <vector>
 #include <string_view>
+#include <stdexcept>
 
 namespace web::json {
 using namespace sajson;
 using node_t = sajson::value;
+using spec_t = std::vector<std::string>;
 
 // Additional special functions we may add...
 
@@ -38,6 +42,94 @@ private:
     std::size_t *data_{nullptr};
     std::size_t size_{0};
 };
+
+template <typename T>
+inline void _make_field(std::ostringstream& out, const std::string& key, const T& value, bool& first) {
+    if(!first) {
+        out << ",";
+    }
+    else {
+        first = false;
+    }
+
+    out << "\"" << key << "\":";
+    if constexpr (std::is_convertible_v<T, std::string>) {
+        out << "\"" << value << "\"";
+    }
+    else if  constexpr (std::is_same_v<T, bool>) {
+        out << (value ? "true" : "false");
+    }
+    else {
+        out << value;
+    }
+}
+
+template <typename... Args>
+inline auto make_json(const spec_t& spec, Args... args) {
+    if (spec.size() != sizeof...(args)) throw std::invalid_argument("Number of arguments does not match the JSON specification.");
+
+    std::ostringstream out;
+    out << "{";
+    auto first = true;
+    auto it = spec.begin();
+
+    // Expand variadic arguments in order
+    ([&]() {
+        _make_field(out, *it, args, first);
+        ++it;
+    }(), ...);
+
+    out << "}";
+    return out.str();
+}
+
+template<typename T>
+inline auto make_array(const std::vector<T>& list, bool nl = false) {
+    std::ostringstream out;
+    auto count = size_t(0);
+    out << "[";
+    if(nl)
+        out << std::endl;
+    for(const auto& value : list) {
+        if constexpr (std::is_convertible_v<T, std::string>) {
+            out << "\"" << value << "\"";
+        }
+        else if  constexpr (std::is_same_v<T, bool>) {
+            out << (value ? "true" : "false");
+        }
+        else {
+            out << value;
+        }
+        if(++count < list.size())
+            out << ",";
+        if(nl)
+            out << std::endl;
+    }
+    out << "]";
+    if(nl)
+        out << std::endl;
+    return out.str();
+}
+
+template<typename T>
+inline auto make_objects(const std::vector<T>& list, bool nl = true) {
+    std::ostringstream out;
+    auto count = size_t(0);
+    out << "[";
+    if(nl)
+        out << std::endl;
+    for(const auto& value : list) {
+        out << value;
+        if(++count < list.size())
+            out << ",";
+        if(nl)
+            out << std::endl;
+    }
+    out << "]";
+    if(nl)
+        out << std::endl;
+    return out.str();
+}
 
 inline auto data_view(char *text, std::size_t size = 0) {
     if(!size)
